@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMHYLES BESS — Schema a Blocchi Elettrico</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f8f7f4;
+    --card: #ffffff;
+    --border: rgba(0,0,0,0.10);
+    --text-primary: #1a1a18;
+    --text-secondary: #5f5e5a;
+    --text-hint: #888780;
+    --accent: #185FA5;
+    --amber: #BA7517;
+    --amber-bg: #FAEEDA;
+    --blue-bg: #E6F1FB;
+    --green-bg: #EAF3DE;
+    --teal-bg: #E1F5EE;
+    --gray-bg: #F1EFE8;
+    --red-bg: #FCEBEB;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a;
+      --card: #252523;
+      --border: rgba(255,255,255,0.10);
+      --text-primary: #e8e6df;
+      --text-secondary: #b4b2a9;
+      --text-hint: #888780;
+      --amber-bg: #412402;
+      --blue-bg: #042C53;
+      --green-bg: #173404;
+      --teal-bg: #04342C;
+      --gray-bg: #2C2C2A;
+      --red-bg: #501313;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 24px 16px 48px;
+  }
+
+  header {
+    max-width: 900px;
+    margin: 0 auto 28px;
+  }
+
+  header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+
+  header p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 99px;
+    margin-right: 6px;
+    margin-top: 8px;
+    background: var(--blue-bg);
+    color: var(--accent);
+    border: 1px solid rgba(24,95,165,0.2);
+  }
+
+  .diagram-card {
+    max-width: 900px;
+    margin: 0 auto 24px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    overflow-x: auto;
+  }
+
+  .diagram-card svg { display: block; width: 100%; }
+
+  /* SVG node hover */
+  .node { cursor: pointer; }
+  .node:hover rect, .node:hover circle { opacity: 0.85; }
+
+  /* Info panel */
+  #info-panel {
+    max-width: 900px;
+    margin: 0 auto 24px;
+    background: var(--blue-bg);
+    border: 1px solid rgba(24,95,165,0.2);
+    border-radius: 12px;
+    padding: 16px 20px;
+    font-size: 14px;
+    color: var(--text-primary);
+    display: none;
+    line-height: 1.6;
+  }
+
+  #info-panel strong { color: var(--accent); }
+  #info-panel .close-btn {
+    float: right;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--text-hint);
+    line-height: 1;
+    margin-left: 8px;
+  }
+  #info-panel .close-btn:hover { color: var(--text-primary); }
+
+  .legend {
+    max-width: 900px;
+    margin: 0 auto 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .legend-dot {
+    width: 12px; height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  footer {
+    max-width: 900px;
+    margin: 32px auto 0;
+    font-size: 11px;
+    color: var(--text-hint);
+    text-align: center;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+
+  /* SVG color classes */
+  svg .c-amber rect { fill: var(--amber-bg); stroke: #BA7517; }
+  svg .c-amber text { fill: #633806; }
+  svg .c-blue  rect { fill: var(--blue-bg);  stroke: #185FA5; }
+  svg .c-blue  text { fill: #042C53; }
+  svg .c-green rect { fill: var(--green-bg); stroke: #3B6D11; }
+  svg .c-green text { fill: #173404; }
+  svg .c-teal  rect { fill: var(--teal-bg);  stroke: #0F6E56; }
+  svg .c-teal  text { fill: #04342C; }
+  svg .c-gray  rect { fill: var(--gray-bg);  stroke: #5F5E5A; }
+  svg .c-gray  text { fill: #2C2C2A; }
+  svg .c-red   rect { fill: var(--red-bg);   stroke: #A32D2D; }
+  svg .c-red   text { fill: #501313; }
+
+  @media (prefers-color-scheme: dark) {
+    svg .c-amber text { fill: #FAC775; }
+    svg .c-blue  text { fill: #B5D4F4; }
+    svg .c-green text { fill: #C0DD97; }
+    svg .c-teal  text { fill: #9FE1CB; }
+    svg .c-gray  text { fill: #D3D1C7; }
+    svg .c-red   text { fill: #F7C1C1; }
+    svg .c-amber rect { stroke: #EF9F27; }
+    svg .c-blue  rect { stroke: #378ADD; }
+    svg .c-green rect { stroke: #639922; }
+    svg .c-teal  rect { stroke: #1D9E75; }
+    svg .c-gray  rect { stroke: #888780; }
+    svg .c-red   rect { stroke: #E24B4A; }
+  }
+
+  svg text { fill: var(--text-primary); }
+  svg .ts   { font-size: 12px; font-family: inherit; }
+  svg .th   { font-size: 14px; font-weight: 500; font-family: inherit; }
+  svg .arr  { stroke: var(--text-secondary); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>SMHYLES BESS — Schema a Blocchi Elettrico</h1>
+  <p>Architettura elettrica del sistema di accumulo 240 kW / 720 kWh in container ISO 20' HC.<br>
+  Clicca su ogni blocco per visualizzare i dettagli del componente.</p>
+  <span class="badge">Rev. 1 — Marzo 2026</span>
+  <span class="badge">FZSoNick SA × ELVI S.p.A.</span>
+  <span class="badge">Progetto SMHYLES — HORIZON-CL5-2023-D2-01</span>
+</header>
+
+<div id="info-panel">
+  <span class="close-btn" onclick="closeInfo()">×</span>
+  <div id="info-content"></div>
+</div>
+
+<div class="diagram-card">
+<svg width="100%" viewBox="0 0 680 624">
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+
+<!-- Row 1: External sources -->
+<g class="node c-gray" onclick="showInfo('pcs')">
+  <rect x="30" y="20" width="190" height="52" rx="8" stroke-width="0.5"/>
+  <text class="th" x="125" y="41" text-anchor="middle" dominant-baseline="central">PCS / Inverter</text>
+  <text class="ts" x="125" y="60" text-anchor="middle" dominant-baseline="central">esterno — lato cliente</text>
+</g>
+
+<g class="node c-gray" onclick="showInfo('grid')">
+  <rect x="460" y="20" width="190" height="52" rx="8" stroke-width="0.5"/>
+  <text class="th" x="555" y="41" text-anchor="middle" dominant-baseline="central">Rete 400VAC 3PH+N</text>
+  <text class="ts" x="555" y="60" text-anchor="middle" dominant-baseline="central">50 kW — ingresso container</text>
+</g>
+
+<!-- Power arrows -->
+<line x1="125" y1="72" x2="125" y2="116" stroke="#EF9F27" stroke-width="2" marker-end="url(#arrow)"/>
+<text class="ts" x="133" y="97" dominant-baseline="central" style="fill:#BA7517">DC 660–810V</text>
+
+<line x1="555" y1="72" x2="555" y2="116" stroke="#378ADD" stroke-width="2" marker-end="url(#arrow)"/>
+<text class="ts" x="563" y="97" dominant-baseline="central" style="fill:#185FA5">400VAC 3PH</text>
+
+<!-- Row 2: Switchboards -->
+<g class="node c-amber" onclick="showInfo('qdc1')">
+  <rect x="20" y="120" width="290" height="208" rx="12" stroke-width="0.5"/>
+  <text class="th" x="165" y="144" text-anchor="middle" dominant-baseline="central">+QDC1 — Distribuzione DC</text>
+  <text class="ts" x="36" y="170" dominant-baseline="central">▸ MCB gen. 630A / 1000VDC (ABB T6L630)</text>
+  <text class="ts" x="36" y="192" dominant-baseline="central">▸ Bobine sgancio + contatti ausiliari</text>
+  <text class="ts" x="36" y="214" dominant-baseline="central">▸ Sbarre Cu + morsetti potenza DC</text>
+  <text class="ts" x="36" y="236" dominant-baseline="central">▸ 13× MCB DC 4P / 40A / 1000VDC</text>
+  <text class="ts" x="36" y="258" dominant-baseline="central">▸ Trasduttori LEM — I: 500A / V: 1000V</text>
+  <text class="ts" x="36" y="280" dominant-baseline="central">▸ Convertitore 810VDC → 24VDC (Pulse)</text>
+  <text class="ts" x="36" y="302" dominant-baseline="central">▸ Barra GND equipotenziale</text>
+</g>
+
+<g class="node c-blue" onclick="showInfo('qac1')">
+  <rect x="370" y="120" width="290" height="208" rx="12" stroke-width="0.5"/>
+  <text class="th" x="515" y="144" text-anchor="middle" dominant-baseline="central">+QAC1 / +QPLC</text>
+  <text class="ts" x="386" y="170" dominant-baseline="central">▸ MCB gen. 4P / 100A dif. (ABB S300)</text>
+  <text class="ts" x="386" y="192" dominant-baseline="central">▸ 25× MCB riscaldo 2P / 10A / 230VAC</text>
+  <text class="ts" x="386" y="214" dominant-baseline="central">▸ Contattore 80A + MCB ausiliari vari</text>
+  <text class="ts" x="386" y="236" dominant-baseline="central">▸ PLC Siemens S7-1500 ET200SP</text>
+  <text class="ts" x="386" y="258" dominant-baseline="central">▸ Pannello HMI 12" Siemens Unified</text>
+  <text class="ts" x="386" y="280" dominant-baseline="central">▸ Gateway Moxa (fornito da FZSoNick)</text>
+  <text class="ts" x="386" y="302" dominant-baseline="central">▸ Modbus TCP/IP → PCS esterno</text>
+</g>
+
+<!-- 24VDC cross-link -->
+<path d="M310 280 L370 280" fill="none" stroke="#EF9F27" stroke-width="1.5" marker-end="url(#arrow)" stroke-dasharray="5 3"/>
+<text class="ts" x="340" y="272" text-anchor="middle" dominant-baseline="central" style="fill:#BA7517">24VDC</text>
+
+<!-- Row 3: Buses -->
+<line x1="165" y1="328" x2="165" y2="346" stroke="#EF9F27" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="515" y1="328" x2="515" y2="346" stroke="#378ADD" stroke-width="2" marker-end="url(#arrow)"/>
+
+<g class="node c-amber" onclick="showInfo('busdc')">
+  <rect x="20" y="348" width="290" height="22" rx="4" stroke-width="0.5"/>
+  <text class="th" x="165" y="359" text-anchor="middle" dominant-baseline="central">Bus DC 660–810 VDC</text>
+</g>
+
+<g class="node c-blue" onclick="showInfo('busac')">
+  <rect x="370" y="348" width="290" height="22" rx="4" stroke-width="0.5"/>
+  <text class="th" x="515" y="359" text-anchor="middle" dominant-baseline="central">Distribuzione 230/400VAC</text>
+</g>
+
+<!-- Arrows buses → loads -->
+<line x1="80"  y1="370" x2="80"  y2="388" stroke="#EF9F27" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="165" y1="370" x2="165" y2="388" stroke="#EF9F27" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="250" y1="370" x2="250" y2="388" stroke="#EF9F27" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="430" y1="370" x2="430" y2="388" stroke="#378ADD" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="515" y1="370" x2="515" y2="388" stroke="#378ADD" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="600" y1="370" x2="600" y2="388" stroke="#378ADD" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<!-- Row 4: Loads -->
+<g class="node c-green" onclick="showInfo('batteries')">
+  <rect x="20" y="390" width="290" height="112" rx="10" stroke-width="0.5"/>
+  <text class="th" x="165" y="415" text-anchor="middle" dominant-baseline="central">Zona Batterie — 13 Rack</text>
+  <text class="ts" x="165" y="437" text-anchor="middle" dominant-baseline="central">75 moduli 250ES — 25 stringhe 3S25P</text>
+  <text class="ts" x="165" y="457" text-anchor="middle" dominant-baseline="central">240 kW / 720 kWh — NaNiCl₂</text>
+  <text class="ts" x="165" y="477" text-anchor="middle" dominant-baseline="central">Ogni rack: 6 moduli — MCB DC 40A</text>
+  <text class="ts" x="165" y="494" text-anchor="middle" dominant-baseline="central">BMS ← Modbus RTU RS485 → Gateway</text>
+</g>
+
+<g class="node c-teal" onclick="showInfo('utilities')">
+  <rect x="370" y="390" width="290" height="112" rx="10" stroke-width="0.5"/>
+  <text class="th" x="515" y="415" text-anchor="middle" dominant-baseline="central">Utenze container 230/400VAC</text>
+  <text class="ts" x="386" y="440" dominant-baseline="central">▸ Riscaldo batterie 230VAC (max 29 kW)</text>
+  <text class="ts" x="386" y="460" dominant-baseline="central">▸ Ventilatori zona calda 400VAC (9.000 m³/h)</text>
+  <text class="ts" x="386" y="480" dominant-baseline="central">▸ Condizionatore zona fredda 230VAC 12kBTU</text>
+  <text class="ts" x="386" y="496" dominant-baseline="central">▸ Luci LED + prese 16A + antincendio</text>
+</g>
+
+<!-- Heating cross-connect -->
+<path d="M370 440 L312 440" fill="none" stroke="#378ADD" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+<text class="ts" x="341" y="432" text-anchor="middle" dominant-baseline="central" style="fill:#185FA5">230VAC</text>
+
+<!-- Row 5: Info boxes -->
+<g class="node c-teal" onclick="showInfo('comms')">
+  <rect x="20" y="524" width="200" height="68" rx="8" stroke-width="0.5"/>
+  <text class="th" x="120" y="546" text-anchor="middle" dominant-baseline="central">Comunicazione</text>
+  <text class="ts" x="120" y="566" text-anchor="middle" dominant-baseline="central">Gateway ↔ PCS: Modbus TCP/IP</text>
+  <text class="ts" x="120" y="582" text-anchor="middle" dominant-baseline="central">Gateway ↔ BMS: RTU RS485</text>
+</g>
+
+<g class="node c-red" onclick="showInfo('safety')">
+  <rect x="240" y="524" width="200" height="68" rx="8" stroke-width="0.5"/>
+  <text class="th" x="340" y="546" text-anchor="middle" dominant-baseline="central">Sicurezza</text>
+  <text class="ts" x="340" y="566" text-anchor="middle" dominant-baseline="central">Antincendio: sgancio DC + AC</text>
+  <text class="ts" x="340" y="582" text-anchor="middle" dominant-baseline="central">E-stop: sgancio DC, AC resta attivo</text>
+</g>
+
+<g class="node c-gray" onclick="showInfo('remote')">
+  <rect x="460" y="524" width="200" height="68" rx="8" stroke-width="0.5"/>
+  <text class="th" x="560" y="546" text-anchor="middle" dominant-baseline="central">Accesso remoto</text>
+  <text class="ts" x="560" y="566" text-anchor="middle" dominant-baseline="central">PLC + HMI via Profinet/Ethernet</text>
+  <text class="ts" x="560" y="582" text-anchor="middle" dominant-baseline="central">Internet — gestito dal sito finale</text>
+</g>
+</svg>
+</div>
+
+<div class="legend">
+  <span style="color:var(--text-hint);font-size:12px;margin-right:4px">Legenda:</span>
+  <span class="legend-item"><span class="legend-dot" style="background:#FAEEDA;border:1px solid #BA7517"></span>Quadro / Bus DC</span>
+  <span class="legend-item"><span class="legend-dot" style="background:#E6F1FB;border:1px solid #185FA5"></span>Quadro / Bus AC + Controllo</span>
+  <span class="legend-item"><span class="legend-dot" style="background:#EAF3DE;border:1px solid #3B6D11"></span>Batterie</span>
+  <span class="legend-item"><span class="legend-dot" style="background:#E1F5EE;border:1px solid #0F6E56"></span>Utenze container / Comunicazione</span>
+  <span class="legend-item"><span class="legend-dot" style="background:#F1EFE8;border:1px solid #5F5E5A"></span>Esterno / Sistema</span>
+  <span class="legend-item"><span class="legend-dot" style="background:#FCEBEB;border:1px solid #A32D2D"></span>Sicurezza</span>
+</div>
+
+<script>
+const INFO = {
+  pcs: {
+    title: 'PCS / Inverter — esterno',
+    body: `Il PCS (Power Conversion System) è un convertitore DC/AC bidirezionale fornito dal cliente, esterno al container BESS. Fornisce la tensione DC al bus del container nel range 660–810 VDC e riceve i setpoint di potenza dal Gateway tramite Modbus TCP/IP (PCS = Master, Gateway = Slave). La comunicazione avviene via cavo Ethernet RJ45 collegato al QAC1/QPLC.`
+  },
+  grid: {
+    title: 'Rete 400VAC 3PH+N — ingresso container',
+    body: `Alimentazione ausiliaria trifase 400VAC 3PH+N con 50 kW disponibili per tutte le utenze del container (riscaldo batterie, ventilazione, condizionamento, luci, prese, PLC, Gateway). Non è previsto UPS interno; eventuale UPS esterno è a cura del sito. La linea è protetta da MCB generale differenziale 4P/100A (ABB S300) nel quadro QAC1.`
+  },
+  qdc1: {
+    title: '+QDC1 — Quadro Distribuzione DC',
+    body: `Quadro in acciaio RAL 7035 (Rittal VX25 / ABB E-Power), dim. indicative 2100×1000×500mm, IP43, accesso frontale. Contiene: MCB generale ABB T6L630 4P/630A/1000VDC con bobina di sgancio; 13 MCB 4P/40A/1000VDC (uno per rack — ogni MCB protegge 2 stringhe 3S = 6 moduli); trasduttori LEM per corrente 500-0-500A/4-20mA e tensione 1000VDC/4-20mA; convertitore Pulse 810VDC→24VDC/20A per alimentazione ausiliaria ridondante. ⚠ NOTA: l'offerta ELVI prevede 13 MCB (1 per rack), le specifiche originali indicavano 25 MCB (1 per stringa). Punto aperto OI-01.`
+  },
+  qac1: {
+    title: '+QAC1 / +QPLC — Quadro Servizi AC e Controllo',
+    body: `Quadro doppio in acciaio RAL 7035, dim. indicative 2100×1200×500mm, IP43. Sezione AC: MCB gen. 4P/100A dif., 25 MCB 2P/10A/230VAC per riscaldo batterie (1 per stringa), contattore 4P/80A per inserzione/disinserzione riscaldo, MCB per ventilatori, condizionatore, luci, prese, antincendio, alimentatore 24VDC. Sezione PLC/24VDC: CPU Siemens S7-1500 (1510SP F-1 PN ET200SP Safety), schede ET200SP DI/DO/AI/AO, HMI 12" Siemens Unified MTP1200 (cod. 6AV2123-3MB32-0AW0), Gateway Moxa (fornito da FZSoNick in c.l.), switch Ethernet 8 porte, alimentatore ridondante 24VDC con modulo diodo accoppiatore.`
+  },
+  busdc: {
+    title: 'Bus DC 660–810 VDC',
+    body: `Sbarre in rame all'interno del QDC1 per la distribuzione della potenza DC verso tutti i rack batterie. La tensione operativa varia da 585V (fine scarica, condizione realistica) a 825V (fine carica). Il valore nominale è 774 VDC (3 × 258V per stringa). Le sbarre sono dimensionate per la corrente massima di scarica di 410A.`
+  },
+  busac: {
+    title: 'Distribuzione 230/400VAC',
+    body: `Sbarre e morsettiere nel QAC1 per la distribuzione delle utenze AC del container. Le utenze sono protette singolarmente da MCB dedicati. Il riscaldo batterie è gestito tramite un contattore 80A inserito/disinserito dal PLC in funzione della temperatura rilevata dalle sonde NTC (4 in zona calda + 1 in zona fredda).`
+  },
+  batteries: {
+    title: 'Zona Batterie — 13 Rack, 75 moduli 250ES',
+    body: `Configurazione: 3S25P — 3 moduli in serie per stringa × 25 stringhe in parallelo = 75 moduli totali. Ogni rack ospita 6 moduli (2 stringhe). Tecnologia NaNiCl₂ (sale fuso): temperatura operativa ~300°C, mantenuta dai riscaldatori interni. Ogni stringa ha un BMS integrato (logica Master-Slave: 1 BMS Master + 2 Slave per stringa). Il Gateway Moxa comunica con tutti i 25 BMS Master via Modbus RTU su RS485 (connettori RJ45). I cavi con connettore proprietario lato batteria sono a cura di FZSoNick.`
+  },
+  utilities: {
+    title: 'Utenze container 230/400VAC',
+    body: `Riscaldo batterie: max 29,25 kW (caso peggiore, tutti i riscaldatori ON), 7,5 kW in stand-by floating, ~19 kW in funzionamento nominale 240kW. Ventilazione zona calda: 2 ventilatori assiali 4.500 m³/h cad. con inverter di velocità (ctrl. PLC 0-10VDC), 6 griglie INOX 800×600 con filtri G4 sui lati lunghi. Condizionamento zona fredda: monoblocco 12.000 BTU/h (3,5 kW) per mantenere T≤30°C nella zona tecnica. Illuminazione: plafoniere LED + emergenza in entrambe le zone. Prese: 230VAC/16A in zona tecnica e zona batterie.`
+  },
+  comms: {
+    title: 'Architettura di comunicazione',
+    body: `Due bus distinti e indipendenti: (1) Gateway ↔ PCS: Modbus TCP/IP su Ethernet RJ45 — il PCS è Master, il Gateway è Slave. Scambio setpoint di tensione/corrente e stati operativi. (2) Gateway ↔ BMS: Modbus RTU su RS485 (25 linee fisiche, connettori RJ45) — il Gateway poll ciclicamente tutti i 25 BMS Master per V, I, T, SOC, allarmi. ⚠ Nessuna comunicazione diretta PLC ↔ Gateway ↔ BMS (confermato da ELVI e FZSoNick).`
+  },
+  safety: {
+    title: 'Sistema di sicurezza e sganci',
+    body: `Due livelli distinti: (1) ANTINCENDIO (centrale Tecnofire): attivazione da sensori ottici fumo o pulsante esterno → sgancio MCB generale DC 810VDC + MCB singoli batterie + MCB servizi 400VAC + contattore riscaldo 230VAC. Previsto contatto verso cliente per sgancio inverter. (2) PULSANTI EMERGENZA interni (1 su QAC1, 1 in zona batterie): sgancio MCB generale DC + MCB singoli batterie + contattore riscaldo. L'interruttore servizi 400VAC resta CHIUSO per mantenere attivi PLC e comunicazioni. ⚠ La logica differenziata antincendio/emergenza è un punto critico verificato e conforme alle specifiche.`
+  },
+  remote: {
+    title: 'Accesso remoto',
+    body: `PLC S7-1500 e HMI Siemens Unified sono interconnessi tramite Profinet/Ethernet ad uno switch dedicato 8 porte. A questo switch può essere connessa la linea Internet del sito finale (Azzorre) per l'accesso remoto al pannello HMI e al PLC. La configurazione degli indirizzi IP e il mapping delle porte Internet è a cura del cliente/gestore del sito. ⚠ Punto aperto OI-06: verificare disponibilità connettività Internet al sito (fibra, 4G/LTE o altro).`
+  }
+};
+
+function showInfo(key) {
+  const panel = document.getElementById('info-panel');
+  const content = document.getElementById('info-content');
+  const data = INFO[key];
+  if (!data) return;
+  content.innerHTML = `<strong>${data.title}</strong><br><br>${data.body}`;
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeInfo() {
+  document.getElementById('info-panel').style.display = 'none';
+}
+</script>
+
+<footer>
+  SMHYLES BESS — Schema a blocchi elettrico Rev. 1 · Marzo 2026 · FZSoNick SA / ELVI S.p.A. · Documento riservato — distribuzione limitata ai partner di progetto
+</footer>
+</body>
+</html>
